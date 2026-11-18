@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Painel de oportunidades de desenvolvimento e prospecção comercial.">
+  <title>Radar Freela</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/" aria-label="Radar Freela, início"><span class="mark" aria-hidden="true"></span> Radar<span class="brand-accent">Freela</span></a>
+    <div class="top-actions">
+      <button type="button" id="sources-button">Fontes</button>
+      <button type="button" id="scan-button" class="primary">Buscar agora</button>
+    </div>
+  </header>
+  <main>
+    <div class="intro">
+      <div>
+        <h1>Oportunidades</h1>
+        <p>Projetos web, mobile, desktop e integrações em um só lugar.</p>
+      </div>
+      <div id="scan-summary" class="sync" role="status">Carregando fontes…</div>
+    </div>
+    <section class="stats" aria-label="Resumo do funil">
+      <div><span>Novas</span><strong id="stat-new">—</strong></div>
+      <div><span>Freelas no funil</span><strong id="stat-freela">—</strong></div>
+      <div><span>Empresas no radar</span><strong id="stat-prospect">—</strong></div>
+      <div><span>Em negociação</span><strong id="stat-negotiation">—</strong></div>
+    </section>
+    <div class="toolbar">
+      <div class="tabs" aria-label="Tipo de oportunidade">
+        <button type="button" data-kind="" aria-pressed="true">Todas</button>
+        <button type="button" data-kind="freela" aria-pressed="false">Freelas</button>
+        <button type="button" data-kind="prospeccao" aria-pressed="false">Prospecção</button>
+      </div>
+      <div class="top-actions">
+        <label class="button import">Importar JSON<input id="import" type="file" accept=".json,application/json"></label>
+        <button type="button" id="add-button">+ Adicionar</button>
+      </div>
+    </div>
+    <section class="filters" aria-label="Filtros de oportunidades">
+      <input id="search" type="search" aria-label="Buscar oportunidades" placeholder="Buscar título, empresa ou termo…">
+      <select id="category" aria-label="Categoria"><option value="">Categoria</option><option>Web</option><option>Mobile</option><option>Desktop</option><option>Integrações</option></select>
+      <select id="stage" aria-label="Etapa"><option value="">Etapa</option></select>
+      <select id="source" aria-label="Fonte"><option value="">Todas as fontes</option></select>
+      <select id="sort" aria-label="Ordenação"><option value="score">Melhor aderência</option><option value="date">Mais recentes</option></select>
+    </section>
+    <div class="workspace">
+      <section class="queue" aria-label="Lista de oportunidades">
+        <p id="count" class="count"></p>
+        <ul id="results"></ul>
+        <button id="more" type="button" hidden>Mostrar mais</button>
+      </section>
+      <aside id="detail" class="detail" aria-label="Detalhes da oportunidade">
+        <p>Selecione uma oportunidade para ver os detalhes.</p>
+      </aside>
+    </div>
+  </main>
+  <dialog id="sources-dialog" aria-labelledby="sources-title">
+    <form id="settings-form">
+      <div class="dialog-head"><h2 id="sources-title">Fontes de busca</h2><button type="button" data-close aria-label="Fechar">×</button></div>
+      <label class="switch"><input name="marketplace" type="checkbox"> <span>Freelancer.com <small>Projetos abertos por especialidade.</small></span></label>
+      <label class="switch"><input name="community" type="checkbox"> <span>Hacker News <small>Pedidos de projeto em publicações recentes.</small></span></label>
+      <label class="switch"><input name="web" type="checkbox"> <span>Busca web com Brave <small id="web-help">Pedidos públicos em português e inglês.</small></span></label>
+      <label class="switch"><input name="local" type="checkbox"> <span>Prospecção local <small>Empresas sem site informado no OpenStreetMap.</small></span></label>
+      <fieldset id="local-fields" hidden>
+        <label>Cidade ou região <input name="city" maxlength="100" placeholder="Ex. Centro de Aracaju"></label>
+        <label>Área (sul, oeste, norte, leste)
+          <input name="bounds" maxlength="120" placeholder="-10.95, -37.10, -10.90, -37.04" aria-describedby="bounds-help">
+        </label>
+        <small id="bounds-help">Use graus decimais de uma área de até 1° por lado. <a href="https://www.openstreetmap.org/export" target="_blank" rel="noopener noreferrer">Ver coordenadas no mapa ↗</a></small>
+        <label>Segmento <select name="segment"><option value="clinicas">Clínicas e consultórios</option><option value="comercio">Comércio</option><option value="restaurantes">Alimentação</option><option value="servicos">Serviços</option></select></label>
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© Colaboradores do OpenStreetMap</a>
+      </fieldset>
+      <label class="switch"><input name="clinics" type="checkbox"> <span>Clínicas privadas · CNES <small>Cadastro de estabelecimentos do Ministério da Saúde.</small></span></label>
+      <label id="clinic-fields" hidden>Código IBGE do município <input name="municipality" inputmode="numeric" maxlength="8" placeholder="Ex. 2800308 para Aracaju"></label>
+      <div id="source-health" class="source-health"></div>
+      <p id="settings-error" class="error" role="alert"></p>
+      <div class="dialog-footer"><button type="button" id="notice-button">Ativar avisos neste navegador</button><button type="submit" class="primary">Salvar fontes</button></div>
+    </form>
+  </dialog>
+  <dialog id="add-dialog" aria-labelledby="add-title">
+    <form id="add-form">
+      <div class="dialog-head"><h2 id="add-title">Adicionar oportunidade</h2><button type="button" data-close aria-label="Fechar">×</button></div>
+      <label>Título <input name="title" required maxlength="180"></label>
+      <label>Link original <input name="url" required type="url" placeholder="https://…" maxlength="2048"></label>
+      <div class="twocol">
+        <label>Tipo <select name="kind"><option value="freela">Freela</option><option value="prospeccao">Prospecção</option></select></label>
+        <label>Categoria <select name="category"><option>Web</option><option>Mobile</option><option>Desktop</option><option>Integrações</option></select></label>
+      </div>
+      <div class="twocol">
+        <label>Fonte <input name="source" maxlength="60" placeholder="Workana, Upwork…"></label>
+        <label>Empresa <input name="organization" maxlength="140"></label>
+      </div>
+      <label>Descrição <textarea name="description" rows="3" maxlength="750"></textarea></label>
+      <p id="add-error" class="error" role="alert"></p>
+      <div class="dialog-footer"><button type="submit" class="primary">Salvar oportunidade</button></div>
+    </form>
+  </dialog>
+  <p id="toast" role="status" hidden></p>
+</body>
+</html>
